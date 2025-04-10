@@ -1,5 +1,3 @@
-// roblox-pass-scraper/index.js
-
 import express from "express";
 import puppeteer from "puppeteer";
 
@@ -16,14 +14,34 @@ app.get("/get-passes", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
-      headless: true,
+      headless: "new", // more stable in some environments
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+
     const page = await browser.newPage();
 
+    // Set a realistic User-Agent to avoid blocking
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
+
     const url = `https://www.roblox.com/users/${userId}/inventory#!/game-passes`;
+    console.log("Navigating to:", url);
+
     await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-    await page.waitForSelector("ul#assetsItems", { timeout: 15000 });
+
+    // Buffer time for dynamic loading
+    await page.waitForTimeout(3000);
+
+    // Check if the expected selector exists
+    const hasSelector = await page.$("ul#assetsItems");
+    if (!hasSelector) {
+      const html = await page.content();
+      console.error("Could not find assetsItems. Page content snapshot:");
+      console.error(html.slice(0, 1000)); // only log first 1000 chars
+      throw new Error("Could not find game pass container.");
+    }
 
     const passes = await page.evaluate(() => {
       const items = [];
