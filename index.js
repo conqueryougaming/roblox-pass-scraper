@@ -13,7 +13,7 @@ app.get("/get-passes", async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      executablePath: process.env.CHROME_BIN || puppeteer.executablePath(),
+      executablePath: puppeteer.executablePath(),
       headless: "new", // more stable in some environments
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
