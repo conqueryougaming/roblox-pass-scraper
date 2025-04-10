@@ -11,6 +11,6 @@
     "puppeteer": "^20.9.0"
   },
   "puppeteer": {
-    "skipDownload": false
+    "skipDownload": true
   }
 }
